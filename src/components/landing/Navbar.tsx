@@ -41,9 +41,9 @@ const Navbar = () => {
 
           {/* CTA */}
           <div className="hidden lg:flex items-center gap-3">
-            <Link to="/dashboard">
+            <Link to="/login">
               <Button variant="outline" size="sm">
-                Dashboard
+                Login Admin
               </Button>
             </Link>
             <Button variant="hero" size="sm">
@@ -76,9 +76,9 @@ const Navbar = () => {
               </a>
             ))}
             <div className="flex flex-col gap-2 pt-3 border-t border-border">
-              <Link to="/dashboard" onClick={() => setIsOpen(false)}>
+              <Link to="/login" onClick={() => setIsOpen(false)}>
                 <Button variant="outline" size="sm" className="w-full">
-                  Dashboard
+                  Login Admin
                 </Button>
               </Link>
               <Button variant="hero" size="sm" className="w-full">
