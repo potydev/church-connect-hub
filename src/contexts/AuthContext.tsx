@@ -1,61 +1,89 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-
-interface User {
-  username: string;
-  name: string;
-  role: string;
-}
+import { User, Session } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
 
 interface AuthContextType {
   user: User | null;
-  login: (username: string, password: string) => boolean;
-  logout: () => void;
+  session: Session | null;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<{ error: string | null }>;
+  signup: (email: string, password: string) => Promise<{ error: string | null }>;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const ADMIN_CREDENTIALS = {
-  username: "admin",
-  password: "admin123",
-  name: "Admin Gereja",
-  role: "Administrator",
-};
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem("church_auth");
-    if (stored) {
-      setUser(JSON.parse(stored));
-    }
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = (username: string, password: string): boolean => {
-    if (
-      username === ADMIN_CREDENTIALS.username &&
-      password === ADMIN_CREDENTIALS.password
-    ) {
-      const userData: User = {
-        username: ADMIN_CREDENTIALS.username,
-        name: ADMIN_CREDENTIALS.name,
-        role: ADMIN_CREDENTIALS.role,
-      };
-      setUser(userData);
-      localStorage.setItem("church_auth", JSON.stringify(userData));
-      return true;
+  const login = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      if (error.message === "Invalid login credentials") {
+        return { error: "Email atau password salah." };
+      }
+      return { error: error.message };
     }
-    return false;
+    return { error: null };
   };
 
-  const logout = () => {
+  const signup = async (email: string, password: string) => {
+    const redirectUrl = `${window.location.origin}/`;
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: redirectUrl },
+    });
+    if (error) {
+      if (error.message.includes("already registered")) {
+        return { error: "Email sudah terdaftar. Silakan login." };
+      }
+      return { error: error.message };
+    }
+    return { error: null };
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem("church_auth");
+    setSession(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        loading,
+        login,
+        logout,
+        signup,
+        isAuthenticated: !!session,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
