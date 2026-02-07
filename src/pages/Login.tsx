@@ -1,32 +1,63 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Church, LogIn, AlertCircle } from "lucide-react";
+import { Church, LogIn, UserPlus, AlertCircle } from "lucide-react";
 
 const Login = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const { login } = useAuth();
+  const [isSignup, setIsSignup] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const { login, signup, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccessMessage("");
 
-    if (!username.trim() || !password.trim()) {
-      setError("Username dan password harus diisi.");
+    if (!email.trim() || !password.trim()) {
+      setError("Email dan password harus diisi.");
       return;
     }
 
-    const success = login(username, password);
-    if (success) {
-      navigate("/dashboard");
-    } else {
-      setError("Username atau password salah. Gunakan admin / admin123");
+    if (password.length < 6) {
+      setError("Password minimal 6 karakter.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      if (isSignup) {
+        const { error } = await signup(email, password);
+        if (error) {
+          setError(error);
+        } else {
+          setSuccessMessage("Akun berhasil dibuat! Silakan cek email untuk verifikasi, atau langsung login.");
+          setIsSignup(false);
+        }
+      } else {
+        const { error } = await login(email, password);
+        if (error) {
+          setError(error);
+        }
+      }
+    } catch {
+      setError("Terjadi kesalahan. Coba lagi.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -40,10 +71,12 @@ const Login = () => {
               <Church className="h-7 w-7 text-accent" />
             </div>
             <h1 className="font-display text-2xl font-bold text-foreground">
-              Login Admin
+              {isSignup ? "Daftar Akun" : "Login Admin"}
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Masuk ke dashboard manajemen gereja
+              {isSignup
+                ? "Buat akun baru untuk manajemen gereja"
+                : "Masuk ke dashboard manajemen gereja"}
             </p>
           </div>
 
@@ -55,17 +88,25 @@ const Login = () => {
             </div>
           )}
 
+          {/* Success */}
+          {successMessage && (
+            <div className="flex items-center gap-2 p-3 mb-6 rounded-lg bg-accent/10 text-accent text-sm">
+              {successMessage}
+            </div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="username"
-                type="text"
-                placeholder="Masukkan username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                maxLength={50}
+                id="email"
+                type="email"
+                placeholder="Masukkan email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                maxLength={100}
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -77,17 +118,35 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 maxLength={100}
+                disabled={isLoading}
               />
             </div>
-            <Button type="submit" className="w-full" size="lg">
-              <LogIn className="h-4 w-4 mr-2" />
-              Masuk
+            <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+              {isLoading ? (
+                <div className="animate-spin h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full mr-2" />
+              ) : isSignup ? (
+                <UserPlus className="h-4 w-4 mr-2" />
+              ) : (
+                <LogIn className="h-4 w-4 mr-2" />
+              )}
+              {isLoading ? "Memproses..." : isSignup ? "Daftar" : "Masuk"}
             </Button>
           </form>
 
-          {/* Hint */}
-          <div className="mt-6 p-3 rounded-lg bg-muted text-xs text-muted-foreground text-center">
-            Demo: username <strong>admin</strong> · password <strong>admin123</strong>
+          {/* Toggle Login/Signup */}
+          <div className="mt-6 text-center text-sm text-muted-foreground">
+            {isSignup ? "Sudah punya akun?" : "Belum punya akun?"}{" "}
+            <button
+              onClick={() => {
+                setIsSignup(!isSignup);
+                setError("");
+                setSuccessMessage("");
+              }}
+              className="text-accent hover:text-accent/80 font-medium transition-colors"
+              disabled={isLoading}
+            >
+              {isSignup ? "Masuk di sini" : "Daftar di sini"}
+            </button>
           </div>
 
           <div className="mt-4 text-center">

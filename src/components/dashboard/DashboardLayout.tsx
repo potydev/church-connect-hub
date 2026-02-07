@@ -3,16 +3,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  Users,
-  CalendarDays,
-  DollarSign,
-  Bell,
-  Church,
-  LayoutDashboard,
-  ChevronLeft,
-  Menu,
-  X,
-  LogOut,
+  Users, CalendarDays, DollarSign, Bell, Church,
+  LayoutDashboard, ChevronLeft, Menu, X, LogOut,
 } from "lucide-react";
 
 const sidebarLinks = [
@@ -28,10 +20,14 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/login");
   };
+
+  const userInitials = user?.email
+    ? user.email.substring(0, 2).toUpperCase()
+    : "AD";
 
   const SidebarContent = () => (
     <>
@@ -64,6 +60,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       </nav>
 
       <div className="p-4 border-t border-sidebar-border space-y-2">
+        <div className="px-3 py-2 text-xs text-sidebar-foreground/50 truncate">
+          {user?.email}
+        </div>
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-2 px-3 py-2 text-sm text-sidebar-foreground/70 hover:text-sidebar-foreground rounded-lg hover:bg-sidebar-accent transition-colors"
@@ -72,11 +71,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           Keluar
         </button>
         <Link to="/">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground"
-          >
+          <Button variant="ghost" size="sm" className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground">
             <ChevronLeft className="h-4 w-4 mr-2" />
             Kembali ke Beranda
           </Button>
@@ -87,24 +82,16 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col w-64 bg-sidebar border-r border-sidebar-border">
         <SidebarContent />
       </aside>
 
-      {/* Mobile Sidebar */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div
-            className="absolute inset-0 bg-foreground/50"
-            onClick={() => setSidebarOpen(false)}
-          />
+          <div className="absolute inset-0 bg-foreground/50" onClick={() => setSidebarOpen(false)} />
           <aside className="relative w-64 h-full bg-sidebar flex flex-col animate-fade-in">
             <div className="absolute top-4 right-4">
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="text-sidebar-foreground"
-              >
+              <button onClick={() => setSidebarOpen(false)} className="text-sidebar-foreground">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -113,14 +100,10 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         </div>
       )}
 
-      {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
         <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border px-4 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2"
-            >
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2">
               <Menu className="h-5 w-5 text-foreground" />
             </button>
             <h1 className="font-display text-xl font-semibold text-foreground">
@@ -133,17 +116,10 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full" />
             </Button>
             <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center">
-              <span className="text-xs font-bold text-accent-foreground">
-                {user?.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .substring(0, 2)}
-              </span>
+              <span className="text-xs font-bold text-accent-foreground">{userInitials}</span>
             </div>
           </div>
         </header>
-
         <div className="p-4 lg:p-8">{children}</div>
       </main>
     </div>
