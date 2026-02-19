@@ -46,7 +46,11 @@ const Navbar = () => {
                 Login Admin
               </Button>
             </Link>
-            <Button variant="hero" size="sm">
+            <Button
+              variant="hero"
+              size="sm"
+              onClick={() => document.getElementById("kontak")?.scrollIntoView({ behavior: "smooth" })}
+            >
               Bergabung
             </Button>
           </div>
@@ -81,7 +85,15 @@ const Navbar = () => {
                   Login Admin
                 </Button>
               </Link>
-              <Button variant="hero" size="sm" className="w-full">
+              <Button
+                variant="hero"
+                size="sm"
+                className="w-full"
+                onClick={() => {
+                  setIsOpen(false);
+                  document.getElementById("kontak")?.scrollIntoView({ behavior: "smooth" });
+                }}
+              >
                 Bergabung
               </Button>
             </div>

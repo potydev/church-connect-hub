@@ -56,7 +56,12 @@ const HeroSection = () => {
             transition={{ duration: 0.8, delay: 0.45, ease: "easeOut" }}
             className="flex flex-col sm:flex-row gap-4"
           >
-            <Button variant="hero" size="lg" className="text-base">
+            <Button
+              variant="hero"
+              size="lg"
+              className="text-base"
+              onClick={() => document.getElementById("jadwal")?.scrollIntoView({ behavior: "smooth" })}
+            >
               Jadwal Ibadah
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
@@ -64,6 +69,7 @@ const HeroSection = () => {
               variant="ghost"
               size="lg"
               className="text-primary-foreground border border-primary-foreground/20 hover:bg-primary-foreground/10 text-base"
+              onClick={() => document.getElementById("kontak")?.scrollIntoView({ behavior: "smooth" })}
             >
               <Play className="mr-2 h-5 w-5" />
               Tonton Khotbah
