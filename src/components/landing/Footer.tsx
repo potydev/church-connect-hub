@@ -25,18 +25,22 @@ const Footer = () => {
               Menu
             </h4>
             <ul className="space-y-2.5">
-              {["Beranda", "Tentang Kami", "Jadwal Ibadah", "Pelayanan", "Dashboard"].map(
-                (link) => (
-                  <li key={link}>
-                    <a
-                      href="#"
-                      className="text-sm text-primary-foreground/60 hover:text-accent transition-colors"
-                    >
-                      {link}
-                    </a>
-                  </li>
-                )
-              )}
+              {[
+                { label: "Beranda", href: "#beranda" },
+                { label: "Tentang Kami", href: "#tentang" },
+                { label: "Jadwal Ibadah", href: "#jadwal" },
+                { label: "Pelayanan", href: "#pelayanan" },
+                { label: "Dashboard", href: "/login" },
+              ].map((link) => (
+                <li key={link.label}>
+                  <a
+                    href={link.href}
+                    className="text-sm text-primary-foreground/60 hover:text-accent transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -50,7 +54,7 @@ const Footer = () => {
                 (link) => (
                   <li key={link}>
                     <a
-                      href="#"
+                      href="#pelayanan"
                       className="text-sm text-primary-foreground/60 hover:text-accent transition-colors"
                     >
                       {link}
