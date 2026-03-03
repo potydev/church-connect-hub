@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { getMembers, getEvents, getFinance, type Member, type ChurchEvent, type FinanceRecord } from "@/lib/store";
 import {
-  Users, CalendarDays, DollarSign, TrendingUp, UserPlus, Clock, Loader2,
+  Users, CalendarDays, DollarSign, TrendingUp, UserPlus, Clock, Loader2, Cake,
 } from "lucide-react";
 
 const DashboardHome = () => {
@@ -29,6 +29,24 @@ const DashboardHome = () => {
     };
     load();
   }, []);
+
+  const upcomingBirthdays = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return members
+      .filter((m) => m.birth_date && m.status === "Aktif")
+      .map((m) => {
+        const birth = new Date(m.birth_date);
+        const nextBday = new Date(today.getFullYear(), birth.getMonth(), birth.getDate());
+        if (nextBday < today) nextBday.setFullYear(nextBday.getFullYear() + 1);
+        const diffDays = Math.round((nextBday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        const age = nextBday.getFullYear() - birth.getFullYear();
+        return { ...m, nextBday, diffDays, age };
+      })
+      .sort((a, b) => a.diffDays - b.diffDays)
+      .slice(0, 6);
+  }, [members]);
 
   if (loading) {
     return (
@@ -139,6 +157,58 @@ const DashboardHome = () => {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Birthday Widget */}
+      <div className="rounded-xl bg-card border border-border p-6">
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <Cake className="h-5 w-5 text-primary" />
+            <h3 className="font-display text-lg font-semibold text-foreground">Ulang Tahun Mendatang</h3>
+          </div>
+          <Link to="/dashboard/members">
+            <Button variant="ghost" size="sm">Lihat Semua</Button>
+          </Link>
+        </div>
+        {upcomingBirthdays.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Belum ada data tanggal lahir jemaat.</p>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {upcomingBirthdays.map((m) => {
+              const isToday = m.diffDays === 0;
+              const dateStr = m.nextBday.toLocaleDateString("id-ID", { day: "numeric", month: "long" });
+              return (
+                <div
+                  key={m.id}
+                  className={`flex items-center gap-3 p-3 rounded-lg border ${
+                    isToday
+                      ? "border-primary/40 bg-primary/5"
+                      : "border-border bg-muted/30"
+                  }`}
+                >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                    isToday ? "bg-primary/15" : "bg-muted"
+                  }`}>
+                    <Cake className={`h-4 w-4 ${isToday ? "text-primary" : "text-muted-foreground"}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{m.name}</p>
+                    <p className="text-xs text-muted-foreground">{dateStr} — {m.age} tahun</p>
+                  </div>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${
+                    isToday
+                      ? "bg-primary/15 text-primary"
+                      : m.diffDays <= 7
+                      ? "bg-accent/10 text-accent"
+                      : "bg-muted text-muted-foreground"
+                  }`}>
+                    {isToday ? "Hari ini! 🎉" : `${m.diffDays} hari lagi`}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
