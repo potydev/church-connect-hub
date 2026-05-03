@@ -1,1 +1,1 @@
-Welocome to church
+welcome
